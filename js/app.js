@@ -9,6 +9,7 @@
       let recordingTimerInterval = null;
       let isDarkMode = false;
       let isGridView = true;
+      let currentFolder = "active";
 
       // DOM Elements
       const noteModal = document.getElementById("note-modal");
@@ -121,6 +122,18 @@
       async function loadNotes() {
         try {
           notes = await loadNotesFromDb();
+          const now = Date.now();
+          const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+          const filtered = [];
+          for (const n of notes) {
+            n.folder = n.folder || "active";
+            if (n.folder === "trash" && n.deletedAt && now - n.deletedAt > THIRTY_DAYS) {
+              await deleteNoteFromDb(n.id);
+            } else {
+              filtered.push(n);
+            }
+          }
+          notes = filtered;
           notes.sort((a, b) => b.createdAt - a.createdAt);
         } catch (error) {
           console.error("Błąd ładowania notatek:", error);
@@ -137,8 +150,11 @@
         const emptyState = document.getElementById("empty-state");
         const filteredNotes = filterNotes();
 
-        const pinned = filteredNotes.filter((n) => n.isPinned);
-        const others = filteredNotes.filter((n) => !n.isPinned);
+        const showPinned = currentFolder === "active";
+        const pinned = showPinned ? filteredNotes.filter((n) => n.isPinned) : [];
+        const others = showPinned
+          ? filteredNotes.filter((n) => !n.isPinned)
+          : filteredNotes;
 
         if (filteredNotes.length === 0) {
           container.innerHTML = "";
@@ -183,23 +199,21 @@
               "xl:grid-cols-4"
             );
           }
-          pinnedSection.classList.toggle("hidden", pinned.length === 0);
+          pinnedSection.classList.toggle("hidden", !showPinned || pinned.length === 0);
           divider.classList.toggle(
             "hidden",
-            pinned.length === 0 || others.length === 0
+            !showPinned || pinned.length === 0 || others.length === 0
           );
-          pinnedContainer.innerHTML = pinned
-            .map((note) => createNoteCard(note))
-            .join("");
-          container.innerHTML = others
-            .map((note) => createNoteCard(note))
-            .join("");
+          pinnedContainer.innerHTML = showPinned
+            ? pinned.map((note) => createNoteCard(note)).join("")
+            : "";
+          container.innerHTML = others.map((note) => createNoteCard(note)).join("");
         }
       }
 
       // Filter notes
       function filterNotes() {
-        let filtered = [...notes];
+        let filtered = notes.filter((n) => (n.folder || "active") === currentFolder);
         const searchTerm = document
           .getElementById("search-input")
           .value.toLowerCase();
@@ -291,6 +305,47 @@
           : "";
         const noteTypeIcon = note.type === "text" ? "article" : "graphic_eq";
 
+        const daysLeftHtml =
+          note.folder === "trash" && note.deletedAt
+            ? `<span class="ml-2">Pozostało ${Math.max(
+                0,
+                Math.ceil((30 * 24 * 60 * 60 * 1000 - (Date.now() - note.deletedAt)) / (24 * 60 * 60 * 1000))
+              )} dni</span>`
+            : "";
+
+        let actionsHtml = "";
+        if (note.folder === "active") {
+          actionsHtml = `
+                                <button onclick="event.stopPropagation(); togglePinNote('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full ${note.isPinned ? 'text-light-primary dark:text-dark-primary' : ''}">
+                                    <span class="material-symbols-outlined text-lg">push_pin</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); editNote('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">edit</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); archiveNote('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">archive</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); confirmDeleteNoteAction('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>`;
+        } else if (note.folder === "archive") {
+          actionsHtml = `
+                                <button onclick="event.stopPropagation(); unarchiveNote('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">unarchive</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); confirmDeleteNoteAction('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">delete</span>
+                                </button>`;
+        } else {
+          actionsHtml = `
+                                <button onclick="event.stopPropagation(); restoreFromTrash('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">restore_from_trash</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); confirmDeleteNoteAction('${note.id}')" class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
+                                    <span class="material-symbols-outlined text-lg">delete_forever</span>
+                                </button>`;
+        }
+
         return `
                 <div class="${colorClass} rounded-2xl border border-light-outline dark:border-dark-outline p-4 md:p-5 flex flex-col justify-between cursor-pointer hover:shadow-m3-light dark:hover:shadow-m3-dark transition-shadow relative group"
                      onclick="openNote('${note.id}')">
@@ -321,27 +376,9 @@
                         }
                         <div class="flex items-center justify-between text-xs text-light-on-surface-variant/80 dark:text-dark-on-surface-variant/80">
                             <span>${date}</span>
-                            <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="event.stopPropagation(); togglePinNote('${
-                                  note.id
-                                }')"
-                                        class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full ${
-                                          note.isPinned ? 'text-light-primary dark:text-dark-primary' : ''
-                                        }">
-                                    <span class="material-symbols-outlined text-lg">push_pin</span>
-                                </button>
-                                <button onclick="event.stopPropagation(); editNote('${
-                                  note.id
-                                }')"
-                                        class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
-                                </button>
-                                <button onclick="event.stopPropagation(); confirmDeleteNoteAction('${
-                                  note.id
-                                }')"
-                                        class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
-                                    <span class="material-symbols-outlined text-lg">delete</span>
-                                </button>
+                            ${daysLeftHtml}
+                            <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                                ${actionsHtml}
                             </div>
                         </div>
                     </div>
@@ -435,6 +472,39 @@
           ) {
             searchSuggestions.classList.add("hidden");
           }
+        });
+
+        document.querySelectorAll(".folder-button").forEach((button) => {
+          button.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.querySelectorAll(".folder-button").forEach((btn) => {
+              btn.classList.remove(
+                "active-filter",
+                "bg-light-primary-container",
+                "dark:bg-dark-primary-container",
+                "text-light-on-primary-container",
+                "dark:text-dark-on-primary-container"
+              );
+              btn.classList.add(
+                "text-light-on-surface-variant",
+                "dark:text-dark-on-surface-variant"
+              );
+            });
+            button.classList.add(
+              "active-filter",
+              "bg-light-primary-container",
+              "dark:bg-dark-primary-container",
+              "text-light-on-primary-container",
+              "dark:text-dark-on-primary-container"
+            );
+            button.classList.remove(
+              "text-light-on-surface-variant",
+              "dark:text-dark-on-surface-variant"
+            );
+            currentFolder = button.dataset.folder;
+            renderNotes();
+            if (window.innerWidth < 768) toggleSidebar();
+          });
         });
 
 
@@ -603,7 +673,7 @@
       function openNoteModal(type, noteId = null) {
         currentNote = noteId
 ? { ...notes.find((n) => n.id === noteId) }
-          : { type: type, tags: [], isFavorite: false, isPinned: false, createdAt: Date.now(), color: "default" };
+          : { type: type, tags: [], isFavorite: false, isPinned: false, createdAt: Date.now(), color: "default", folder: "active" };
 
         currentNote.color = currentNote.color || "default";
 
@@ -1030,6 +1100,40 @@
         });
       }
 
+      function archiveNote(id) {
+        const note = notes.find((n) => n.id === id);
+        if (!note) return;
+        note.folder = "archive";
+        note.updatedAt = Date.now();
+        saveNoteToDb(note).then(() => {
+          renderNotes();
+          showToast("Notatka zarchiwizowana", "info");
+        });
+      }
+
+      function unarchiveNote(id) {
+        const note = notes.find((n) => n.id === id);
+        if (!note) return;
+        note.folder = "active";
+        note.updatedAt = Date.now();
+        saveNoteToDb(note).then(() => {
+          renderNotes();
+          showToast("Przywrócono z archiwum", "info");
+        });
+      }
+
+      function restoreFromTrash(id) {
+        const note = notes.find((n) => n.id === id);
+        if (!note) return;
+        note.folder = "active";
+        note.deletedAt = null;
+        note.updatedAt = Date.now();
+        saveNoteToDb(note).then(() => {
+          renderNotes();
+          showToast("Przywrócono notatkę", "info");
+        });
+      }
+
       // Delete note
       let noteIdToDelete = null;
       function confirmDeleteNoteAction(id) {
@@ -1037,9 +1141,10 @@
         noteIdToDelete = id;
         const note = notes.find((n) => n.id === id);
         if (!note) return;
-        document.getElementById(
-          "confirm-message"
-        ).textContent = `Czy na pewno chcesz usunąć notatkę "${note.title}"?`;
+        document.getElementById("confirm-message").textContent =
+          note.folder === "trash"
+            ? `Trwale usunąć notatkę "${note.title}"?`
+            : `Przenieść notatkę "${note.title}" do kosza?`;
         confirmModal.classList.remove("hidden");
         confirmModal.classList.add("flex");
       }
@@ -1052,12 +1157,22 @@
         /* ... (same as before) ... */
         if (!noteIdToDelete) return;
         try {
-          await deleteNoteFromDb(noteIdToDelete);
-          notes = notes.filter((n) => n.id !== noteIdToDelete);
+          const note = notes.find((n) => n.id === noteIdToDelete);
+          if (!note) return;
+          if (note.folder === "trash") {
+            await deleteNoteFromDb(noteIdToDelete);
+            notes = notes.filter((n) => n.id !== noteIdToDelete);
+            showToast("Notatka usunięta na zawsze.", "success");
+          } else {
+            note.folder = "trash";
+            note.deletedAt = Date.now();
+            note.updatedAt = Date.now();
+            await saveNoteToDb(note);
+            showToast("Przeniesiono do kosza.", "info");
+          }
           renderNotes();
           updateTagFilterUI();
           closeConfirmModal();
-          showToast("Notatka została usunięta.", "success");
         } catch (error) {
           console.error("Błąd usuwania:", error);
           showToast("Błąd podczas usuwania notatki: " + error, "error");
@@ -1288,3 +1403,6 @@
       window.editNote = editNote;
       window.confirmDeleteNoteAction = confirmDeleteNoteAction;
       window.togglePinNote = togglePinNote;
+      window.archiveNote = archiveNote;
+      window.unarchiveNote = unarchiveNote;
+      window.restoreFromTrash = restoreFromTrash;
