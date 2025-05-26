@@ -101,7 +101,6 @@
         renderNotes();
         updateTagFilterUI();
         setupEventListeners();
-        setupAutoSave();
 
         notes.forEach((note) => {
           if (note.reminderAt && note.reminderAt > Date.now()) {
@@ -493,14 +492,6 @@
           btn.addEventListener("click", () => {
             currentNote.color = btn.dataset.color;
             updateColorButtons();
-            if (currentNote.id) {
-              currentNote.updatedAt = Date.now();
-              saveNoteToDb({ ...currentNote }).then(() => {
-                const idx = notes.findIndex((n) => n.id === currentNote.id);
-                if (idx >= 0) notes[idx] = { ...currentNote };
-                renderNotes();
-              });
-            }
           });
         });
 
@@ -607,7 +598,7 @@
       // Modal functions
       function openNoteModal(type, noteId = null) {
         currentNote = noteId
-          ? notes.find((n) => n.id === noteId)
+? { ...notes.find((n) => n.id === noteId) }
           : { type: type, tags: [], isFavorite: false, isPinned: false, createdAt: Date.now(), color: "default" };
 
         currentNote.color = currentNote.color || "default";
