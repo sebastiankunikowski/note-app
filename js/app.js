@@ -8,12 +8,14 @@
       let recordingStartTime = 0;
       let recordingTimerInterval = null;
       let isDarkMode = false;
+      let isGridView = true;
 
       // DOM Elements
       const noteModal = document.getElementById("note-modal");
       const confirmModal = document.getElementById("confirm-modal");
       const themeToggleButton = document.getElementById("theme-toggle");
       const themeToggleText = document.getElementById("theme-toggle-text");
+      const viewToggleButton = document.getElementById("view-toggle");
       const favoriteCheckbox = document.getElementById("note-favorite");
       const pinnedCheckbox = document.getElementById("note-pinned");
       const colorButtons = document.querySelectorAll(
@@ -158,16 +160,29 @@
         } else {
           emptyState.classList.add("hidden");
           emptyState.classList.remove("flex");
-          container.classList.add(
-            "sm:grid-cols-2",
-            "lg:grid-cols-3",
-            "xl:grid-cols-4"
-          );
-          pinnedContainer.classList.add(
-            "sm:grid-cols-2",
-            "lg:grid-cols-3",
-            "xl:grid-cols-4"
-          );
+          if (isGridView) {
+            container.classList.add(
+              "sm:grid-cols-2",
+              "lg:grid-cols-3",
+              "xl:grid-cols-4"
+            );
+            pinnedContainer.classList.add(
+              "sm:grid-cols-2",
+              "lg:grid-cols-3",
+              "xl:grid-cols-4"
+            );
+          } else {
+            container.classList.remove(
+              "sm:grid-cols-2",
+              "lg:grid-cols-3",
+              "xl:grid-cols-4"
+            );
+            pinnedContainer.classList.remove(
+              "sm:grid-cols-2",
+              "lg:grid-cols-3",
+              "xl:grid-cols-4"
+            );
+          }
           pinnedSection.classList.toggle("hidden", pinned.length === 0);
           divider.classList.toggle(
             "hidden",
@@ -463,6 +478,7 @@
           .addEventListener("click", executeDeleteNote);
 
         themeToggleButton.addEventListener("click", toggleTheme);
+        viewToggleButton.addEventListener("click", toggleView);
 
         noteModal.addEventListener("click", (e) => {
           if (e.target === noteModal) closeNoteModal();
@@ -1121,6 +1137,18 @@
         localStorage.setItem("notesAppThemeM3", isDarkMode ? "dark" : "light");
       }
 
+      function toggleView() {
+        isGridView = !isGridView;
+        updateViewIcon();
+        localStorage.setItem("notesViewMode", isGridView ? "grid" : "list");
+        renderNotes();
+      }
+
+      function updateViewIcon() {
+        const icon = viewToggleButton.querySelector(".material-symbols-outlined");
+        icon.textContent = isGridView ? "view_agenda" : "grid_view";
+      }
+
       function loadPreferences() {
         const savedTheme = localStorage.getItem("notesAppThemeM3");
         const themeIcon = themeToggleButton.querySelector(
@@ -1143,6 +1171,10 @@
           themeIcon.textContent = "dark_mode";
           themeToggleText.textContent = "Ciemny motyw";
         }
+
+        const savedView = localStorage.getItem("notesViewMode");
+        isGridView = savedView ? savedView === "grid" : true;
+        updateViewIcon();
       }
 
       // Toast notifications
