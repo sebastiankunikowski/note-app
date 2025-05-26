@@ -62,48 +62,72 @@
         transition: opacity 0.2s ease-out, transform 0.2s ease-out;
       }
 
-      /* Note colors (Material You inspired) */
+      /* Note colors (Google Keep inspired) */
       .note-color-default {
         background-color: #ffffff;
       }
       .dark .note-color-default {
-        background-color: #1f2937;
+        background-color: #202124;
       }
       .note-color-red {
-        background-color: #fecaca;
+        background-color: #F28B82;
       }
       .dark .note-color-red {
-        background-color: #7f1d1d;
+        background-color: #5C2B29;
       }
       .note-color-orange {
-        background-color: #fed7aa;
+        background-color: #FBBC04;
       }
       .dark .note-color-orange {
-        background-color: #7c2d12;
+        background-color: #614A19;
       }
       .note-color-yellow {
-        background-color: #fef08a;
+        background-color: #FFF475;
       }
       .dark .note-color-yellow {
-        background-color: #854d0e;
+        background-color: #635D19;
       }
       .note-color-green {
-        background-color: #bbf7d0;
+        background-color: #CCFF90;
       }
       .dark .note-color-green {
-        background-color: #166534;
+        background-color: #3F6212;
+      }
+      .note-color-teal {
+        background-color: #A7FFEB;
+      }
+      .dark .note-color-teal {
+        background-color: #0B625E;
       }
       .note-color-blue {
-        background-color: #bfdbfe;
+        background-color: #AECBFA;
       }
       .dark .note-color-blue {
-        background-color: #1e3a8a;
+        background-color: #174EA6;
       }
       .note-color-purple {
-        background-color: #ddd6fe;
+        background-color: #D7AEFB;
       }
       .dark .note-color-purple {
-        background-color: #4c1d95;
+        background-color: #42275E;
+      }
+      .note-color-pink {
+        background-color: #FDCFE8;
+      }
+      .dark .note-color-pink {
+        background-color: #5B2245;
+      }
+      .note-color-brown {
+        background-color: #E6C9A8;
+      }
+      .dark .note-color-brown {
+        background-color: #4A342E;
+      }
+      .note-color-gray {
+        background-color: #E8EAED;
+      }
+      .dark .note-color-gray {
+        background-color: #3C4043;
       }
 
       .color-option {

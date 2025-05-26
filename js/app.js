@@ -358,7 +358,7 @@
         }
 
         return `
-                <div class="${colorClass} rounded-2xl border border-light-outline dark:border-dark-outline p-4 md:p-5 flex flex-col justify-between cursor-pointer hover:shadow-m3-light dark:hover:shadow-m3-dark transition-shadow relative group"
+                <div class="${colorClass} rounded-lg shadow-sm hover:shadow-md p-4 md:p-5 flex flex-col justify-between cursor-pointer transition-shadow relative group"
                      onclick="openNote('${note.id}')">
                     ${pinnedIconHtml}${favoriteIconHtml}
                     <div>
