@@ -812,7 +812,7 @@
           voiceForm.classList.add("flex");
           if (transcriptionArea)
             transcriptionArea.classList.toggle("hidden", type !== "transcription");
-          resetRecordingUI();
+          if (!noteId) resetRecordingUI();
           if (currentNote.id && noteId && currentNote.audioBlob) {
             const audioUrl = URL.createObjectURL(currentNote.audioBlob);
             document.getElementById("recorded-audio").src = audioUrl;
