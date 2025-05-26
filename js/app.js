@@ -134,6 +134,7 @@
         const pinnedContainer = document.getElementById("pinned-notes-container");
         const pinnedSection = document.getElementById("pinned-section");
         const divider = document.getElementById("notes-divider");
+        const othersHeader = document.getElementById("others-header");
         const emptyState = document.getElementById("empty-state");
         const filteredNotes = filterNotes();
 
@@ -155,6 +156,7 @@
             "xl:grid-cols-4"
           );
           pinnedSection.classList.add("hidden");
+          othersHeader.classList.add("hidden");
           emptyState.classList.remove("hidden");
           emptyState.classList.add("flex");
         } else {
@@ -185,6 +187,10 @@
           }
           pinnedSection.classList.toggle("hidden", pinned.length === 0);
           divider.classList.toggle(
+            "hidden",
+            pinned.length === 0 || others.length === 0
+          );
+          othersHeader.classList.toggle(
             "hidden",
             pinned.length === 0 || others.length === 0
           );
