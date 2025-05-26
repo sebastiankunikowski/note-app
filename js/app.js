@@ -29,6 +29,9 @@
       const settingsView = document.getElementById("settings-view");
       const notesView = document.getElementById("notes-view");
       const trashRetentionInput = document.getElementById("trash-retention-input");
+      const exportButton = document.getElementById("export-notes");
+      const importButton = document.getElementById("import-notes");
+      const importFileInput = document.getElementById("import-file");
       const fab = document.getElementById("fab");
       const fabMenu = document.getElementById("fab-menu");
       const fabIcon = fab.querySelector(".material-symbols-outlined");
@@ -637,6 +640,9 @@
 
         themeToggleButton.addEventListener("click", toggleTheme);
         viewToggleButton.addEventListener("click", toggleView);
+        exportButton?.addEventListener("click", exportNotes);
+        importButton?.addEventListener("click", () => importFileInput?.click());
+        importFileInput?.addEventListener("change", handleImportFile);
 
         noteModal.addEventListener("click", (e) => {
           if (e.target === noteModal) closeNoteModal();
@@ -1573,6 +1579,76 @@
             }, 2500); // Auto-save after 2.5 seconds of inactivity
           });
         });
+      }
+
+      async function blobToDataURL(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function dataURLToBlob(dataUrl) {
+        const res = await fetch(dataUrl);
+        return await res.blob();
+      }
+
+      async function exportNotes() {
+        try {
+          const allNotes = await loadNotesFromDb();
+          const serialized = [];
+          for (const n of allNotes) {
+            const obj = { ...n };
+            if (n.audioBlob instanceof Blob) {
+              obj.audioBlob = await blobToDataURL(n.audioBlob);
+            }
+            serialized.push(obj);
+          }
+          const blob = new Blob([JSON.stringify(serialized)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "notes.json";
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error("Błąd eksportu notatek:", err);
+          showToast("Błąd eksportu notatek", "error");
+        }
+      }
+
+      async function handleImportFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const imported = JSON.parse(text);
+          if (!Array.isArray(imported)) throw new Error("Zły format pliku");
+          const existing = await loadNotesFromDb();
+          const existingIds = new Set(existing.map((n) => n.id));
+          let added = 0;
+          for (const n of imported) {
+            if (!n.id || existingIds.has(n.id)) continue;
+            const note = { ...n };
+            if (n.audioBlob && typeof n.audioBlob === "string" && n.audioBlob.startsWith("data:")) {
+              note.audioBlob = await dataURLToBlob(n.audioBlob);
+            }
+            await saveNoteToDb(note);
+            notes.unshift(note);
+            existingIds.add(note.id);
+            added++;
+          }
+          notes.sort((a, b) => b.createdAt - a.createdAt);
+          renderNotes();
+          showToast(`Zaimportowano ${added} notatek`, "success");
+        } catch (err) {
+          console.error("Błąd importu notatek:", err);
+          showToast("Błąd importu notatek", "error");
+        } finally {
+          e.target.value = "";
+        }
       }
 
       // Expose functions for inline event handlers
