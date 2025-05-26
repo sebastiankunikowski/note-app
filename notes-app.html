@@ -9,6 +9,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
+    <link rel="stylesheet" href="style.css" />
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -494,7 +495,7 @@
             <label class="inline-flex items-center cursor-pointer group">
               <input type="checkbox" id="note-favorite" class="sr-only peer" />
               <span
-                class="material-symbols-outlined text-light-on-surface-variant dark:text-dark-on-surface-variant peer-checked:text-yellow-500 dark:peer-checked:text-yellow-400 peer-checked:font-['Material_Symbols_Outlined_Fill'] peer-checked:fill"
+                class="material-symbols-outlined text-light-on-surface-variant dark:text-dark-on-surface-variant peer-checked:text-yellow-500 dark:peer-checked:text-yellow-400"
                 >star</span
               >
               <span
@@ -502,6 +503,22 @@
                 >Oznacz jako ważną</span
               >
             </label>
+          </div>
+
+          <div class="mt-5">
+            <label
+              class="block text-xs font-medium text-light-on-surface-variant dark:text-dark-on-surface-variant mb-1"
+              >Kolor karty</label
+            >
+            <div id="note-color-options" class="flex space-x-2">
+              <button class="color-option note-color-default" data-color="default" title="Domyślny"></button>
+              <button class="color-option note-color-red" data-color="red" title="Czerwony"></button>
+              <button class="color-option note-color-orange" data-color="orange" title="Pomarańczowy"></button>
+              <button class="color-option note-color-yellow" data-color="yellow" title="Żółty"></button>
+              <button class="color-option note-color-green" data-color="green" title="Zielony"></button>
+              <button class="color-option note-color-blue" data-color="blue" title="Niebieski"></button>
+              <button class="color-option note-color-purple" data-color="purple" title="Fioletowy"></button>
+            </div>
           </div>
         </div>
 
