@@ -15,7 +15,10 @@
       <header class="sticky top-0 z-50 w-full bg-light-surface dark:bg-dark-surface p-4 shadow-md flex justify-center">
         <div class="relative w-full max-w-3xl">
           <span class="material-symbols-outlined absolute inset-y-0 left-3 flex items-center pointer-events-none text-light-on-surface-variant dark:text-dark-on-surface-variant">search</span>
-          <input type="text" id="search-input" placeholder="Szukaj..." class="w-full pl-10 pr-3 py-2.5 text-sm bg-light-surface-variant dark:bg-dark-surface-variant border-none rounded-full focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary text-light-on-surface dark:text-dark-on-surface placeholder-light-on-surface-variant dark:placeholder-dark-on-surface-variant" />
+          <input type="text" id="search-input" placeholder="Szukaj..." class="w-full pl-10 pr-10 py-2.5 text-sm bg-light-surface-variant dark:bg-dark-surface-variant border-none rounded-full focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary text-light-on-surface dark:text-dark-on-surface placeholder-light-on-surface-variant dark:placeholder-dark-on-surface-variant" />
+          <button id="view-toggle" type="button" class="absolute inset-y-0 right-3 flex items-center p-1.5 rounded-full text-light-on-surface-variant dark:text-dark-on-surface-variant hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant">
+            <span class="material-symbols-outlined">view_agenda</span>
+          </button>
           <div id="search-suggestions" class="absolute left-0 right-0 mt-1 bg-light-surface dark:bg-dark-surface border border-light-outline dark:border-dark-outline rounded-lg shadow-lg text-sm hidden max-h-60 overflow-y-auto z-50"></div>
         </div>
       </header>
