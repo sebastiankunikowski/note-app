@@ -45,7 +45,7 @@
       const sidebarOverlay = document.getElementById("sidebar-overlay");
 
       // Initialize app
-      document.addEventListener("DOMContentLoaded", async function () {
+      async function initApp() {
         loadPreferences();
         await initIndexedDB();
         await loadNotes();
@@ -58,7 +58,13 @@
             setReminder(note);
           }
         });
-      });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initApp);
+      } else {
+        initApp();
+      }
 
       function toggleSidebar() {
         sidebar.classList.toggle("sidebar-open");
