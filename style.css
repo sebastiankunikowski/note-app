@@ -61,3 +61,58 @@
       #fab-menu {
         transition: opacity 0.2s ease-out, transform 0.2s ease-out;
       }
+
+      /* Note colors (Material You inspired) */
+      .note-color-default {
+        background-color: #ffffff;
+      }
+      .dark .note-color-default {
+        background-color: #1f2937;
+      }
+      .note-color-red {
+        background-color: #fecaca;
+      }
+      .dark .note-color-red {
+        background-color: #7f1d1d;
+      }
+      .note-color-orange {
+        background-color: #fed7aa;
+      }
+      .dark .note-color-orange {
+        background-color: #7c2d12;
+      }
+      .note-color-yellow {
+        background-color: #fef08a;
+      }
+      .dark .note-color-yellow {
+        background-color: #854d0e;
+      }
+      .note-color-green {
+        background-color: #bbf7d0;
+      }
+      .dark .note-color-green {
+        background-color: #166534;
+      }
+      .note-color-blue {
+        background-color: #bfdbfe;
+      }
+      .dark .note-color-blue {
+        background-color: #1e3a8a;
+      }
+      .note-color-purple {
+        background-color: #ddd6fe;
+      }
+      .dark .note-color-purple {
+        background-color: #4c1d95;
+      }
+
+      .color-option {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 9999px;
+        border: 2px solid transparent;
+        cursor: pointer;
+      }
+      .color-option.selected {
+        border-color: #3b82f6;
+      }

@@ -77,6 +77,9 @@
       const themeToggleButton = document.getElementById("theme-toggle");
       const themeToggleText = document.getElementById("theme-toggle-text");
       const favoriteCheckbox = document.getElementById("note-favorite");
+      const colorButtons = document.querySelectorAll(
+        "#note-color-options .color-option"
+      );
       const fab = document.getElementById("fab");
       const fabMenu = document.getElementById("fab-menu");
       const fabIcon = fab.querySelector(".material-symbols-outlined");
@@ -260,6 +263,11 @@
           month: "short",
         });
 
+        const colorClass =
+          note.color && note.color !== "default"
+            ? `note-color-${note.color}`
+            : "bg-light-surface dark:bg-dark-surface";
+
         const tagsHtml = note.tags
           .slice(0, 3)
           .map(
@@ -276,7 +284,7 @@
         const noteTypeIcon = note.type === "text" ? "article" : "graphic_eq";
 
         return `
-                <div class="bg-light-surface dark:bg-dark-surface rounded-2xl border border-light-outline dark:border-dark-outline p-4 md:p-5 flex flex-col justify-between cursor-pointer hover:shadow-m3-light dark:hover:shadow-m3-dark transition-shadow relative group" 
+                <div class="${colorClass} rounded-2xl border border-light-outline dark:border-dark-outline p-4 md:p-5 flex flex-col justify-between cursor-pointer hover:shadow-m3-light dark:hover:shadow-m3-dark transition-shadow relative group"
                      onclick="openNote('${note.id}')">
                     ${favoriteIconHtml}
                     <div>
@@ -447,6 +455,20 @@
           .getElementById("note-tags-input")
           .addEventListener("keypress", handleTagInput);
         favoriteCheckbox.addEventListener("change", updateFavoriteIconInModal);
+        colorButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            currentNote.color = btn.dataset.color;
+            updateColorButtons();
+            if (currentNote.id) {
+              currentNote.updatedAt = Date.now();
+              saveNoteToDb({ ...currentNote }).then(() => {
+                const idx = notes.findIndex((n) => n.id === currentNote.id);
+                if (idx >= 0) notes[idx] = { ...currentNote };
+                renderNotes();
+              });
+            }
+          });
+        });
 
         // Keyboard shortcuts
         document.addEventListener("keydown", (e) => {
@@ -521,11 +543,23 @@
         }
       }
 
+      function updateColorButtons() {
+        colorButtons.forEach((btn) => {
+          if (btn.dataset.color === (currentNote.color || "default")) {
+            btn.classList.add("selected");
+          } else {
+            btn.classList.remove("selected");
+          }
+        });
+      }
+
       // Modal functions
       function openNoteModal(type, noteId = null) {
         currentNote = noteId
           ? notes.find((n) => n.id === noteId)
-          : { type: type, tags: [], isFavorite: false, createdAt: Date.now() };
+          : { type: type, tags: [], isFavorite: false, createdAt: Date.now(), color: "default" };
+
+        currentNote.color = currentNote.color || "default";
 
         document.getElementById("modal-title").textContent =
           currentNote.id && noteId ? `Edytuj notatkę` : `Nowa notatka`;
@@ -549,6 +583,8 @@
         currentTags = new Set(currentNote.tags || []);
         renderTagChipsInModal();
         document.getElementById("note-tags-input").value = "";
+
+        updateColorButtons();
 
         const textForm = document.getElementById("text-note-form");
         const voiceForm = document.getElementById("voice-note-form");
@@ -586,6 +622,7 @@
         currentNote = null;
         recordedAudioBlob = null;
         currentTags.clear();
+        colorButtons.forEach((btn) => btn.classList.remove("selected"));
       }
 
       // Tag Management
@@ -804,6 +841,7 @@
             return;
           }
 
+          currentNote.color = currentNote.color || "default";
           currentNote.title = title;
           currentNote.tags = Array.from(currentTags);
           currentNote.isFavorite = favoriteCheckbox.checked;
