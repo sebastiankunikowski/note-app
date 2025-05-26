@@ -77,6 +77,7 @@
       const themeToggleButton = document.getElementById("theme-toggle");
       const themeToggleText = document.getElementById("theme-toggle-text");
       const favoriteCheckbox = document.getElementById("note-favorite");
+      const pinnedCheckbox = document.getElementById("note-pinned");
       const colorButtons = document.querySelectorAll(
         "#note-color-options .color-option"
       );
@@ -191,16 +192,28 @@
       // Render notes
       function renderNotes() {
         const container = document.getElementById("notes-container");
+        const pinnedContainer = document.getElementById("pinned-notes-container");
+        const pinnedSection = document.getElementById("pinned-section");
         const emptyState = document.getElementById("empty-state");
         const filteredNotes = filterNotes();
 
+        const pinned = filteredNotes.filter((n) => n.isPinned);
+        const others = filteredNotes.filter((n) => !n.isPinned);
+
         if (filteredNotes.length === 0) {
           container.innerHTML = "";
+          pinnedContainer.innerHTML = "";
           container.classList.remove(
             "sm:grid-cols-2",
             "lg:grid-cols-3",
             "xl:grid-cols-4"
-          ); // Clear grid classes
+          );
+          pinnedContainer.classList.remove(
+            "sm:grid-cols-2",
+            "lg:grid-cols-3",
+            "xl:grid-cols-4"
+          );
+          pinnedSection.classList.add("hidden");
           emptyState.classList.remove("hidden");
           emptyState.classList.add("flex");
         } else {
@@ -210,8 +223,17 @@
             "sm:grid-cols-2",
             "lg:grid-cols-3",
             "xl:grid-cols-4"
-          ); // Ensure grid classes are present
-          container.innerHTML = filteredNotes
+          );
+          pinnedContainer.classList.add(
+            "sm:grid-cols-2",
+            "lg:grid-cols-3",
+            "xl:grid-cols-4"
+          );
+          pinnedSection.classList.toggle("hidden", pinned.length === 0);
+          pinnedContainer.innerHTML = pinned
+            .map((note) => createNoteCard(note))
+            .join("");
+          container.innerHTML = others
             .map((note) => createNoteCard(note))
             .join("");
         }
@@ -281,12 +303,15 @@
         const favoriteIconHtml = note.isFavorite
           ? '<span class="material-symbols-outlined text-yellow-500 dark:text-yellow-400 text-lg fill absolute top-2 right-2">star</span>'
           : "";
+        const pinnedIconHtml = note.isPinned
+          ? '<span class="material-symbols-outlined text-light-primary dark:text-dark-primary text-lg absolute top-2 left-2 -rotate-45">push_pin</span>'
+          : "";
         const noteTypeIcon = note.type === "text" ? "article" : "graphic_eq";
 
         return `
                 <div class="${colorClass} rounded-2xl border border-light-outline dark:border-dark-outline p-4 md:p-5 flex flex-col justify-between cursor-pointer hover:shadow-m3-light dark:hover:shadow-m3-dark transition-shadow relative group"
                      onclick="openNote('${note.id}')">
-                    ${favoriteIconHtml}
+                    ${pinnedIconHtml}${favoriteIconHtml}
                     <div>
                         <h3 class="text-md font-medium text-light-on-surface dark:text-dark-on-surface mb-2 truncate pr-6">${
                           note.title || "Bez tytułu"
@@ -314,15 +339,23 @@
                         <div class="flex items-center justify-between text-xs text-light-on-surface-variant/80 dark:text-dark-on-surface-variant/80">
                             <span>${date}</span>
                             <div class="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="event.stopPropagation(); togglePinNote('${
+                                  note.id
+                                }')"
+                                        class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full ${
+                                          note.isPinned ? 'text-light-primary dark:text-dark-primary' : ''
+                                        }">
+                                    <span class="material-symbols-outlined text-lg">push_pin</span>
+                                </button>
                                 <button onclick="event.stopPropagation(); editNote('${
                                   note.id
-                                }')" 
+                                }')"
                                         class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
                                     <span class="material-symbols-outlined text-lg">edit</span>
                                 </button>
                                 <button onclick="event.stopPropagation(); confirmDeleteNoteAction('${
                                   note.id
-                                }')" 
+                                }')"
                                         class="p-1.5 hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full">
                                     <span class="material-symbols-outlined text-lg">delete</span>
                                 </button>
@@ -455,6 +488,7 @@
           .getElementById("note-tags-input")
           .addEventListener("keypress", handleTagInput);
         favoriteCheckbox.addEventListener("change", updateFavoriteIconInModal);
+        pinnedCheckbox.addEventListener("change", updatePinnedIconInModal);
         colorButtons.forEach((btn) => {
           btn.addEventListener("click", () => {
             currentNote.color = btn.dataset.color;
@@ -543,6 +577,23 @@
         }
       }
 
+      function updatePinnedIconInModal() {
+        const iconSpan = pinnedCheckbox.parentElement.querySelector(
+          ".material-symbols-outlined"
+        );
+        if (pinnedCheckbox.checked) {
+          iconSpan.classList.add(
+            "text-light-primary",
+            "dark:text-dark-primary"
+          );
+        } else {
+          iconSpan.classList.remove(
+            "text-light-primary",
+            "dark:text-dark-primary"
+          );
+        }
+      }
+
       function updateColorButtons() {
         colorButtons.forEach((btn) => {
           if (btn.dataset.color === (currentNote.color || "default")) {
@@ -557,7 +608,7 @@
       function openNoteModal(type, noteId = null) {
         currentNote = noteId
           ? notes.find((n) => n.id === noteId)
-          : { type: type, tags: [], isFavorite: false, createdAt: Date.now(), color: "default" };
+          : { type: type, tags: [], isFavorite: false, isPinned: false, createdAt: Date.now(), color: "default" };
 
         currentNote.color = currentNote.color || "default";
 
@@ -579,6 +630,8 @@
 
         favoriteCheckbox.checked = currentNote.isFavorite || false;
         updateFavoriteIconInModal();
+        pinnedCheckbox.checked = currentNote.isPinned || false;
+        updatePinnedIconInModal();
 
         currentTags = new Set(currentNote.tags || []);
         renderTagChipsInModal();
@@ -623,6 +676,8 @@
         recordedAudioBlob = null;
         currentTags.clear();
         colorButtons.forEach((btn) => btn.classList.remove("selected"));
+        pinnedCheckbox.checked = false;
+        updatePinnedIconInModal();
       }
 
       // Tag Management
@@ -845,6 +900,7 @@
           currentNote.title = title;
           currentNote.tags = Array.from(currentTags);
           currentNote.isFavorite = favoriteCheckbox.checked;
+          currentNote.isPinned = pinnedCheckbox.checked;
           const reminderInput = document.getElementById("note-reminder").value;
           currentNote.reminderAt = reminderInput
             ? new Date(reminderInput).getTime()
@@ -965,6 +1021,17 @@
       function editNote(id) {
         const note = notes.find((n) => n.id === id);
         if (note) openNoteModal(note.type, id);
+      }
+
+      function togglePinNote(id) {
+        const note = notes.find((n) => n.id === id);
+        if (!note) return;
+        note.isPinned = !note.isPinned;
+        note.updatedAt = Date.now();
+        saveNoteToDb(note).then(() => {
+          renderNotes();
+          showToast(note.isPinned ? "Notatka przypięta" : "Notatka odpięta", "info");
+        });
       }
 
       // Delete note
