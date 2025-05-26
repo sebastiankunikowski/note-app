@@ -214,6 +214,31 @@
         }
         return filtered;
       }
+      function updateSearchSuggestions() {
+        const container = document.getElementById("search-suggestions");
+        const term = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        if (!term) {
+          container.classList.add("hidden");
+          container.innerHTML = "";
+          return;
+        }
+        const suggestions = [
+          ...new Set(
+            notes
+              .flatMap((n) => [n.title, ...n.tags])
+              .filter((t) => t && t.toLowerCase().includes(term))
+          ),
+        ].slice(0, 5);
+        container.innerHTML = suggestions
+          .map(
+            (s) =>
+              `<div class="suggestion-item px-3 py-2 cursor-pointer hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant">${s}</div>`
+          )
+          .join("");
+        container.classList.toggle("hidden", suggestions.length === 0);
+      }
 
       // Create note card HTML
       function createNoteCard(note) {
@@ -368,10 +393,29 @@
         document
           .getElementById("re-record")
           .addEventListener("click", resetRecordingUIAndStart);
+        const searchInput = document.getElementById("search-input");
+        const searchSuggestions = document.getElementById("search-suggestions");
+        searchInput.addEventListener("input", () => {
+          renderNotes();
+          updateSearchSuggestions();
+        });
+        searchInput.addEventListener("focus", updateSearchSuggestions);
+        searchSuggestions.addEventListener("click", (e) => {
+          if (e.target.classList.contains("suggestion-item")) {
+            searchInput.value = e.target.textContent;
+            renderNotes();
+            searchSuggestions.classList.add("hidden");
+          }
+        });
+        document.addEventListener("click", (e) => {
+          if (
+            e.target !== searchInput &&
+            !searchSuggestions.contains(e.target)
+          ) {
+            searchSuggestions.classList.add("hidden");
+          }
+        });
 
-        document
-          .getElementById("search-input")
-          .addEventListener("input", renderNotes);
 
         document.querySelectorAll(".filter-type-button").forEach((button) => {
           button.addEventListener("click", (e) => {
