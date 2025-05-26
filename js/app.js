@@ -5,6 +5,8 @@
       let mediaRecorder = null;
       let audioChunks = [];
       let recordedAudioBlob = null;
+      let speechRecognition = null;
+      let transcriptionText = "";
       let recordingStartTime = 0;
       let recordingTimerInterval = null;
       let isDarkMode = false;
@@ -232,8 +234,8 @@
           filtered = filtered.filter(
             (note) =>
               note.title.toLowerCase().includes(searchTerm) ||
-              (note.type === "text" &&
-                note.content.toLowerCase().includes(searchTerm)) ||
+              ((note.type === "text" || note.type === "transcription") &&
+                (note.content || "").toLowerCase().includes(searchTerm)) ||
               note.tags.some((tag) => tag.toLowerCase().includes(searchTerm))
           );
         }
@@ -314,7 +316,12 @@
         const pinnedIconHtml = note.isPinned
           ? '<span class="material-symbols-outlined text-light-primary dark:text-dark-primary text-lg absolute top-2 left-2 -rotate-45">push_pin</span>'
           : "";
-        const noteTypeIcon = note.type === "text" ? "article" : "graphic_eq";
+        const noteTypeIcon =
+          note.type === "text"
+            ? "article"
+            : note.type === "voice"
+            ? "graphic_eq"
+            : "subtitles";
 
         const daysLeftHtml =
           note.folder === "trash" && note.deletedAt
@@ -370,6 +377,12 @@
                             ? `
                             <p class="text-sm text-light-on-surface-variant dark:text-dark-on-surface-variant mb-3 line-clamp-4">${
                               note.content || ""
+                            }</p>
+                        `
+                            : note.type === "transcription"
+                            ? `
+                            <p class="text-sm text-light-on-surface-variant dark:text-dark-on-surface-variant mb-3 line-clamp-4">${
+                              (note.content || "").substring(0, 100)
                             }</p>
                         `
                             : `
@@ -438,6 +451,14 @@
           document
             .getElementById(id)
             ?.addEventListener("click", () => openNoteModal("voice"))
+        );
+        [
+          "add-transcription-note-fab",
+          "add-transcription-note-fab-desktop",
+        ].forEach((id) =>
+          document
+            .getElementById(id)
+            ?.addEventListener("click", () => openNoteModal("transcription"))
         );
 
         document
@@ -751,7 +772,13 @@
         document.getElementById("note-content").value =
           currentNote.type === "text" ? currentNote.content || "" : "";
         document.getElementById("voice-note-title").value =
-          currentNote.type === "voice" ? currentNote.title || "" : "";
+          currentNote.type === "voice" || currentNote.type === "transcription"
+            ? currentNote.title || ""
+            : "";
+        const transcriptionInput = document.getElementById("transcription-text");
+        if (transcriptionInput)
+          transcriptionInput.value =
+            currentNote.type === "transcription" ? currentNote.content || "" : "";
         document.getElementById("note-reminder").value = currentNote.reminderAt
           ? new Date(
               currentNote.reminderAt - new Date().getTimezoneOffset() * 60000
@@ -773,14 +800,18 @@
 
         const textForm = document.getElementById("text-note-form");
         const voiceForm = document.getElementById("voice-note-form");
+        const transcriptionArea = document.getElementById("transcription-area");
 
         if (type === "text") {
           textForm.classList.remove("hidden");
           voiceForm.classList.add("hidden");
+          if (transcriptionArea) transcriptionArea.classList.add("hidden");
         } else {
           textForm.classList.add("hidden");
           voiceForm.classList.remove("hidden");
           voiceForm.classList.add("flex");
+          if (transcriptionArea)
+            transcriptionArea.classList.toggle("hidden", type !== "transcription");
           resetRecordingUI();
           if (currentNote.id && noteId && currentNote.audioBlob) {
             const audioUrl = URL.createObjectURL(currentNote.audioBlob);
@@ -802,6 +833,9 @@
         if (mediaRecorder && mediaRecorder.state !== "inactive") {
           mediaRecorder.stop();
           mediaRecorder.stream.getTracks().forEach((track) => track.stop());
+        }
+        if (currentNote && currentNote.type === "transcription") {
+          stopSpeechRecognition();
         }
         clearRecordingTimer();
         currentNote = null;
@@ -902,6 +936,9 @@
             document
               .getElementById("audio-playback")
               .classList.remove("hidden");
+            if (currentNote && currentNote.type === "transcription") {
+              stopSpeechRecognition();
+            }
             showToast("Nagrywanie zakończone", "success");
           };
           mediaRecorder.onstart = () => {
@@ -920,6 +957,9 @@
               .getElementById("record-button")
               .classList.add("animate-pulse-opacity"); // For main record button if visible
           };
+          if (currentNote && currentNote.type === "transcription") {
+            startSpeechRecognition();
+          }
           mediaRecorder.start();
         } catch (error) {
           console.error("Błąd nagrywania:", error);
@@ -953,6 +993,9 @@
         /* ... (same as before, with UI updates) ... */
         if (mediaRecorder && mediaRecorder.state !== "inactive")
           mediaRecorder.stop();
+        if (currentNote && currentNote.type === "transcription") {
+          stopSpeechRecognition();
+        }
         document
           .getElementById("record-button")
           .classList.remove("animate-pulse-opacity");
@@ -964,6 +1007,12 @@
         /* ... (same as before, with UI updates) ... */
         if (mediaRecorder && mediaRecorder.state !== "inactive")
           mediaRecorder.stop();
+        if (currentNote && currentNote.type === "transcription") {
+          stopSpeechRecognition();
+          transcriptionText = "";
+          const tArea = document.getElementById("transcription-text");
+          if (tArea) tArea.value = "";
+        }
         clearRecordingTimer();
         audioChunks = [];
         recordedAudioBlob = null;
@@ -1007,6 +1056,46 @@
         recordingTimerInterval = null;
       }
 
+      function startSpeechRecognition() {
+        const SpeechRec =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) {
+          showToast("Transkrypcja nie jest wspierana w tej przeglądarce", "error");
+          return;
+        }
+        speechRecognition = new SpeechRec();
+        speechRecognition.lang = "pl-PL";
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.onresult = (e) => {
+          let interim = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const res = e.results[i];
+            if (res.isFinal) {
+              transcriptionText += res[0].transcript;
+            } else {
+              interim += res[0].transcript;
+            }
+          }
+          const tArea = document.getElementById("transcription-text");
+          if (tArea) tArea.value = transcriptionText + interim;
+        };
+        speechRecognition.onerror = (e) => {
+          console.error("Błąd rozpoznawania mowy", e);
+        };
+        transcriptionText = "";
+        speechRecognition.start();
+      }
+
+      function stopSpeechRecognition() {
+        if (speechRecognition) {
+          try {
+            speechRecognition.stop();
+          } catch {}
+          speechRecognition = null;
+        }
+      }
+
       // Save note
       async function saveNote() {
         /* ... (mostly same, ensure currentNote is used for new notes too) ... */
@@ -1017,6 +1106,7 @@
           }
 
           const isTextNote = currentNote.type === "text";
+          const isTranscriptionNote = currentNote.type === "transcription";
           const title = (
             isTextNote
               ? document.getElementById("note-title").value
@@ -1056,6 +1146,20 @@
               .value.trim();
             if (!currentNote.content) {
               showToast("Treść notatki jest wymagana.", "error");
+              return;
+            }
+          } else if (isTranscriptionNote) {
+            if (recordedAudioBlob) {
+              currentNote.audioBlob = recordedAudioBlob;
+            } else if (!currentNote.audioBlob) {
+              showToast("Nagraj audio przed zapisaniem.", "error");
+              return;
+            }
+            currentNote.content = document
+              .getElementById("transcription-text")
+              .value.trim();
+            if (!currentNote.content) {
+              showToast("Brak transkrypcji do zapisania.", "error");
               return;
             }
           } else {
@@ -1424,8 +1528,9 @@
         const titleInput = document.getElementById("note-title");
         const contentInput = document.getElementById("note-content");
         const voiceTitleInput = document.getElementById("voice-note-title");
+        const transcriptionInput = document.getElementById("transcription-text");
 
-        [titleInput, contentInput, voiceTitleInput].forEach((input) => {
+        [titleInput, contentInput, voiceTitleInput, transcriptionInput].forEach((input) => {
           input.addEventListener("input", () => {
             if (
               noteModal.classList.contains("hidden") ||
@@ -1444,6 +1549,8 @@
               ).trim();
               if (currentNote.type === "text")
                 currentNote.content = contentInput.value.trim();
+              else if (currentNote.type === "transcription")
+                currentNote.content = transcriptionInput.value.trim();
               currentNote.updatedAt = Date.now();
               currentNote.tags = Array.from(currentTags); // Make sure tags are current
 
