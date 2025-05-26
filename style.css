@@ -1,0 +1,63 @@
+      body {
+        font-family: "Inter", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+        vertical-align: middle;
+        font-size: 24px;
+      }
+      .material-symbols-outlined.fill {
+        font-variation-settings: "FILL" 1;
+      }
+
+      /* Custom scrollbar for note content in modal */
+      #note-content::-webkit-scrollbar,
+      #voice-note-form .overflow-y-auto::-webkit-scrollbar,
+      #tag-filter::-webkit-scrollbar {
+        width: 8px;
+      }
+      #note-content::-webkit-scrollbar-track,
+      #voice-note-form .overflow-y-auto::-webkit-scrollbar-track,
+      #tag-filter::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      #note-content::-webkit-scrollbar-thumb,
+      #voice-note-form .overflow-y-auto::-webkit-scrollbar-thumb,
+      #tag-filter::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* light-outline */
+        border-radius: 20px;
+        border: 2px solid transparent; /* Creates padding around thumb */
+        background-clip: content-box;
+      }
+      .dark #note-content::-webkit-scrollbar-thumb,
+      .dark #voice-note-form .overflow-y-auto::-webkit-scrollbar-thumb,
+      .dark #tag-filter::-webkit-scrollbar-thumb {
+        background-color: #4b5563; /* dark-outline */
+      }
+
+      @keyframes pulse-opacity {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+      .animate-pulse-opacity {
+        animation: pulse-opacity 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      /* Sidebar transition */
+      #sidebar {
+        transition: transform 0.3s ease-in-out;
+      }
+      .sidebar-open {
+        transform: translateX(0) !important;
+      }
+
+      /* FAB Menu */
+      #fab-menu {
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+      }
