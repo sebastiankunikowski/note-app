@@ -162,7 +162,7 @@
           const audioSrc = modal.querySelector("audio source")?.src;
           modal.remove();
           if (audioSrc && audioSrc.startsWith("blob:")) {
-            URL.revokeObjectURL(audioSrc);
+            window.URL.revokeObjectURL(audioSrc);
           }
           if (location.hash.startsWith("#note=")) location.hash = "#";
         }
@@ -514,8 +514,8 @@
                             ? `<div class="flex gap-1 mt-1">${note.attachments
                                 .slice(0, 3)
                                 .map((a) => {
-                                  const url = URL.createObjectURL(a);
-                                  return `<img src="${url}" onload="URL.revokeObjectURL('${url}')" class="w-16 h-16 object-cover rounded" />`;
+                                  const url = window.URL.createObjectURL(a);
+                                  return `<img src="${url}" onload="window.URL.revokeObjectURL('${url}')" class="w-16 h-16 object-cover rounded" />`;
                                 })
                                 .join("")}</div>`
                             : ""
@@ -906,7 +906,7 @@
             transcriptionArea.classList.toggle("hidden", type !== "transcription");
           if (!noteId) resetRecordingUI();
           if (currentNote.id && noteId && currentNote.audioBlob) {
-            const audioUrl = URL.createObjectURL(currentNote.audioBlob);
+            const audioUrl = window.URL.createObjectURL(currentNote.audioBlob);
             document.getElementById("recorded-audio").src = audioUrl;
             document
               .getElementById("audio-playback")
@@ -969,10 +969,10 @@
         container.innerHTML = "";
         (currentNote.attachments || []).forEach((file) => {
           if (!(file instanceof Blob)) return;
-          const url = URL.createObjectURL(file);
+          const url = window.URL.createObjectURL(file);
           const img = document.createElement("img");
           img.src = url;
-          img.onload = () => URL.revokeObjectURL(url);
+          img.onload = () => window.URL.revokeObjectURL(url);
           img.className = "w-16 h-16 object-cover rounded";
           container.appendChild(img);
         });
@@ -1034,7 +1034,7 @@
               recordedAudioBlob = new Blob(audioChunks, {
                 type: mediaRecorder.mimeType,
               });
-              const audioUrl = URL.createObjectURL(recordedAudioBlob);
+              const audioUrl = window.URL.createObjectURL(recordedAudioBlob);
               document.getElementById("recorded-audio").src = audioUrl;
               document
                 .getElementById("audio-playback")
@@ -1325,7 +1325,7 @@
 
         if (note.type === "voice") {
           if (note.audioBlob instanceof Blob) {
-            const audioUrl = URL.createObjectURL(note.audioBlob);
+            const audioUrl = window.URL.createObjectURL(note.audioBlob);
             const audioPlayerModal = document.createElement("div");
             audioPlayerModal.className =
               "fixed inset-0 bg-black/50 dark:bg-black/70 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"; // Higher z-index
@@ -1362,10 +1362,10 @@
                     `;
             document.body.appendChild(audioPlayerModal);
             const audioEl = audioPlayerModal.querySelector("audio");
-            audioEl.onended = () => URL.revokeObjectURL(audioUrl);
+            audioEl.onended = () => window.URL.revokeObjectURL(audioUrl);
             audioEl.onerror = () => {
               showToast("Błąd odtwarzania audio.", "error");
-              URL.revokeObjectURL(audioUrl);
+              window.URL.revokeObjectURL(audioUrl);
             };
           } else {
             showToast("Nie można odtworzyć notatki głosowej.", "error");
@@ -1722,12 +1722,12 @@
             serialized.push(obj);
           }
           const blob = new Blob([JSON.stringify(serialized)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
+          const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = "notes.json";
           a.click();
-          URL.revokeObjectURL(url);
+          window.URL.revokeObjectURL(url);
         } catch (err) {
           console.error("Błąd eksportu notatek:", err);
           showToast("Błąd eksportu notatek", "error");
