@@ -1126,13 +1126,19 @@
         const themeIcon = themeToggleButton.querySelector(
           ".material-symbols-outlined"
         );
-        if (savedTheme === "dark") {
-          isDarkMode = true;
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const useDark = savedTheme
+          ? savedTheme === "dark"
+          : prefersDark;
+
+        isDarkMode = useDark;
+        if (useDark) {
           document.documentElement.classList.add("dark");
           themeIcon.textContent = "light_mode";
           themeToggleText.textContent = "Jasny motyw";
         } else {
-          isDarkMode = false;
           document.documentElement.classList.remove("dark");
           themeIcon.textContent = "dark_mode";
           themeToggleText.textContent = "Ciemny motyw";

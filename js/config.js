@@ -3,53 +3,53 @@
         theme: {
           extend: {
             colors: {
-              // Light Theme (Material You Inspired)
+              // Light theme – Material 3
               light: {
-                primary: "#3b82f6", // Blue 600
-                "primary-container": "#dbeafe", // Blue 100
-                "on-primary-container": "#1e40af", // Blue 800
-                secondary: "#4f46e5", // Indigo 600
-                "secondary-container": "#e0e7ff", // Indigo 100
-                "on-secondary-container": "#3730a3", // Indigo 800
-                tertiary: "#059669", // Emerald 600
-                "tertiary-container": "#a7f3d0", // Emerald 200
-                "on-tertiary-container": "#065f46", // Emerald 700
-                error: "#dc2626", // Red 600
-                "error-container": "#fee2e2", // Red 100
-                "on-error-container": "#991b1b", // Red 800
-                background: "#f8fafc", // Slate 50
-                "on-background": "#0f172a", // Slate 900
-                surface: "#ffffff", // White
-                "on-surface": "#1e293b", // Slate 800
-                "surface-variant": "#e2e8f0", // Slate 200
-                "on-surface-variant": "#475569", // Slate 600
-                outline: "#cbd5e1", // Slate 300
+                primary: "#6750A4",
+                "primary-container": "#EADDFF",
+                "on-primary-container": "#21005D",
+                secondary: "#625B71",
+                "secondary-container": "#E8DEF8",
+                "on-secondary-container": "#1D192B",
+                tertiary: "#7D5260",
+                "tertiary-container": "#FFD8E4",
+                "on-tertiary-container": "#31111D",
+                error: "#B3261E",
+                "error-container": "#F9DEDC",
+                "on-error-container": "#410E0B",
+                background: "#FFFBFE",
+                "on-background": "#1C1B1F",
+                surface: "#FFFBFE",
+                "on-surface": "#1C1B1F",
+                "surface-variant": "#E7E0EC",
+                "on-surface-variant": "#49454F",
+                outline: "#79747E",
               },
-              // Dark Theme (Material You Inspired)
+              // Dark theme – Material 3
               dark: {
-                primary: "#60a5fa", // Blue 400
-                "primary-container": "#1e3a8a", // Blue 800 (adjust for container)
-                "on-primary-container": "#bfdbfe", // Blue 200
-                secondary: "#818cf8", // Indigo 400
-                "secondary-container": "#3730a3", // Indigo 800
-                "on-secondary-container": "#c7d2fe", // Indigo 200
-                tertiary: "#34d399", // Emerald 400
-                "tertiary-container": "#065f46", // Emerald 700
-                "on-tertiary-container": "#a7f3d0", // Emerald 200
-                error: "#f87171", // Red 400
-                "error-container": "#7f1d1d", // Red 900
-                "on-error-container": "#fecaca", // Red 200
-                background: "#111827", // Gray 900 (cooler dark)
-                "on-background": "#f3f4f6", // Gray 100
-                surface: "#1f2937", // Gray 800
-                "on-surface": "#d1d5db", // Gray 300
-                "surface-variant": "#374151", // Gray 700
-                "on-surface-variant": "#9ca3af", // Gray 400
-                outline: "#4b5563", // Gray 600
+                primary: "#D0BCFF",
+                "primary-container": "#4F378B",
+                "on-primary-container": "#EADDFF",
+                secondary: "#CCC2DC",
+                "secondary-container": "#4A4458",
+                "on-secondary-container": "#E8DEF8",
+                tertiary: "#EFB8C8",
+                "tertiary-container": "#633B48",
+                "on-tertiary-container": "#FFD8E4",
+                error: "#F2B8B5",
+                "error-container": "#8C1D18",
+                "on-error-container": "#F9DEDC",
+                background: "#1C1B1F",
+                "on-background": "#E6E1E5",
+                surface: "#1C1B1F",
+                "on-surface": "#E6E1E5",
+                "surface-variant": "#49454F",
+                "on-surface-variant": "#CAC4D0",
+                outline: "#938F99",
               },
             },
             fontFamily: {
-              sans: ["Inter", "sans-serif"],
+              sans: ["Roboto", "sans-serif"],
             },
             boxShadow: {
               "m3-light":
