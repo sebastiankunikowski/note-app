@@ -391,6 +391,17 @@
                             </div>
                         `
                         }
+                        ${
+                          note.attachments && note.attachments.length
+                            ? `<div class="flex gap-1 mt-1">${note.attachments
+                                .slice(0, 3)
+                                .map((a) => {
+                                  const url = URL.createObjectURL(a);
+                                  return `<img src="${url}" onload="URL.revokeObjectURL('${url}')" class="w-16 h-16 object-cover rounded" />`;
+                                })
+                                .join("")}</div>`
+                            : ""
+                        }
                     </div>
                     <div class="mt-auto">
                         ${
@@ -657,6 +668,10 @@
           });
         });
 
+        document
+          .getElementById("note-attachments")
+          .addEventListener("change", handleAttachmentInput);
+
         // Keyboard shortcuts
         document.addEventListener("keydown", (e) => {
           if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
@@ -796,6 +811,10 @@
         renderTagChipsInModal();
         document.getElementById("note-tags-input").value = "";
 
+        currentNote.attachments = currentNote.attachments || [];
+        document.getElementById("note-attachments").value = "";
+        renderAttachmentPreviews();
+
         updateColorButtons();
 
         const textForm = document.getElementById("text-note-form");
@@ -841,6 +860,8 @@
         currentNote = null;
         recordedAudioBlob = null;
         currentTags.clear();
+        document.getElementById("note-attachments").value = "";
+        document.getElementById("attachment-previews").innerHTML = "";
         colorButtons.forEach((btn) => btn.classList.remove("selected"));
         pinnedCheckbox.checked = false;
         updatePinnedIconInModal();
@@ -866,6 +887,29 @@
           chip.appendChild(closeIcon);
           container.appendChild(chip);
         });
+      }
+
+      function renderAttachmentPreviews() {
+        const container = document.getElementById("attachment-previews");
+        if (!container) return;
+        container.innerHTML = "";
+        (currentNote.attachments || []).forEach((file) => {
+          if (!(file instanceof Blob)) return;
+          const url = URL.createObjectURL(file);
+          const img = document.createElement("img");
+          img.src = url;
+          img.onload = () => URL.revokeObjectURL(url);
+          img.className = "w-16 h-16 object-cover rounded";
+          container.appendChild(img);
+        });
+      }
+
+      function handleAttachmentInput(e) {
+        const files = Array.from(e.target.files);
+        if (!currentNote.attachments) currentNote.attachments = [];
+        currentNote.attachments.push(...files);
+        renderAttachmentPreviews();
+        e.target.value = "";
       }
 
       function handleTagInput(event) {
@@ -1123,6 +1167,7 @@
           currentNote.tags = Array.from(currentTags);
           currentNote.isFavorite = favoriteCheckbox.checked;
           currentNote.isPinned = pinnedCheckbox.checked;
+          currentNote.attachments = currentNote.attachments || [];
           const reminderInput = document.getElementById("note-reminder").value;
           currentNote.reminderAt = reminderInput
             ? new Date(reminderInput).getTime()
@@ -1190,6 +1235,7 @@
           const savedTitle = currentNote.title;
           closeNoteModal();
           showToast(`Notatka "${savedTitle}" zapisana.`, "success");
+          document.getElementById("note-attachments").value = "";
         } catch (error) {
           console.error("Błąd zapisu notatki:", error);
           showToast("Błąd podczas zapisywania notatki: " + error, "error");

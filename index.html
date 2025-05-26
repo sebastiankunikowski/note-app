@@ -402,6 +402,21 @@
 
           <div class="mt-3">
             <label
+              class="block text-xs font-medium text-light-on-surface-variant dark:text-dark-on-surface-variant mb-1"
+              >Załączniki</label
+            >
+            <input
+              type="file"
+              id="note-attachments"
+              accept="image/*"
+              multiple
+              class="block w-full text-sm text-light-on-surface-variant dark:text-dark-on-surface-variant file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-light-primary-container dark:file:bg-dark-primary-container file:text-light-on-primary-container dark:file:text-dark-on-primary-container"
+            />
+            <div id="attachment-previews" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="mt-3">
+            <label
               class="block text-xs font-medium text-light-on-surface-variant dark:text-dark-on-surface-variant mb-1.5"
               >Tagi</label
             >
