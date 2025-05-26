@@ -556,8 +556,8 @@
       // Modal functions
       function openNoteModal(type, noteId = null) {
         currentNote = noteId
-          ? notes.find((n) => n.id === noteId)
-          : { type: type, tags: [], isFavorite: false, createdAt: Date.now(), color: "default" };
+          ? { ...notes.find((n) => n.id === noteId) }
+          : { type: type, tags: [], isFavorite: false, isPinned: false, createdAt: Date.now(), color: "default" };
 
         currentNote.color = currentNote.color || "default";
 
