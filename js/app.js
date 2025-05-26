@@ -880,8 +880,9 @@
 
           renderNotes();
           updateTagFilterUI();
+          const savedTitle = currentNote.title;
           closeNoteModal();
-          showToast(`Notatka "${currentNote.title}" zapisana.`, "success");
+          showToast(`Notatka "${savedTitle}" zapisana.`, "success");
         } catch (error) {
           console.error("Błąd zapisu notatki:", error);
           showToast("Błąd podczas zapisywania notatki: " + error, "error");
@@ -1192,3 +1193,10 @@
           });
         });
       }
+
+      // Expose functions for inline event handlers
+      window.toggleSidebar = toggleSidebar;
+      window.openNote = openNote;
+      window.editNote = editNote;
+      window.confirmDeleteNoteAction = confirmDeleteNoteAction;
+      window.togglePinNote = togglePinNote;
