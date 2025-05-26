@@ -61,7 +61,7 @@
 
         handleHashChange();
         window.addEventListener("hashchange", handleHashChange);
-      });
+
 
       }
 
