@@ -10,6 +10,7 @@
       let isDarkMode = false;
       let isGridView = true;
       let currentFolder = "active";
+      let trashRetentionDays = 30;
 
       // DOM Elements
       const noteModal = document.getElementById("note-modal");
@@ -22,6 +23,10 @@
       const colorButtons = document.querySelectorAll(
         "#note-color-options .color-option"
       );
+      const settingsButton = document.getElementById("settings-button");
+      const settingsView = document.getElementById("settings-view");
+      const notesView = document.getElementById("notes-view");
+      const trashRetentionInput = document.getElementById("trash-retention-input");
       const fab = document.getElementById("fab");
       const fabMenu = document.getElementById("fab-menu");
       const fabIcon = fab.querySelector(".material-symbols-outlined");
@@ -123,11 +128,11 @@
         try {
           notes = await loadNotesFromDb();
           const now = Date.now();
-          const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+          const retentionMs = trashRetentionDays * 24 * 60 * 60 * 1000;
           const filtered = [];
           for (const n of notes) {
             n.folder = n.folder || "active";
-            if (n.folder === "trash" && n.deletedAt && now - n.deletedAt > THIRTY_DAYS) {
+            if (n.folder === "trash" && n.deletedAt && now - n.deletedAt > retentionMs) {
               await deleteNoteFromDb(n.id);
             } else {
               filtered.push(n);
@@ -315,7 +320,7 @@
           note.folder === "trash" && note.deletedAt
             ? `<span class="ml-2">Pozostało ${Math.max(
                 0,
-                Math.ceil((30 * 24 * 60 * 60 * 1000 - (Date.now() - note.deletedAt)) / (24 * 60 * 60 * 1000))
+                Math.ceil((trashRetentionDays * 24 * 60 * 60 * 1000 - (Date.now() - note.deletedAt)) / (24 * 60 * 60 * 1000))
               )} dni</span>`
             : "";
 
@@ -496,6 +501,19 @@
                 "dark:text-dark-on-surface-variant"
               );
             });
+            if (settingsButton) {
+              settingsButton.classList.remove(
+                "active-filter",
+                "bg-light-primary-container",
+                "dark:bg-dark-primary-container",
+                "text-light-on-primary-container",
+                "dark:text-dark-on-primary-container"
+              );
+              settingsButton.classList.add(
+                "text-light-on-surface-variant",
+                "dark:text-dark-on-surface-variant"
+              );
+            }
             button.classList.add(
               "active-filter",
               "bg-light-primary-container",
@@ -508,10 +526,53 @@
               "dark:text-dark-on-surface-variant"
             );
             currentFolder = button.dataset.folder;
+            settingsView?.classList.add("hidden");
+            notesView?.classList.remove("hidden");
             renderNotes();
             if (window.innerWidth < 768) toggleSidebar();
           });
         });
+
+        if (settingsButton) {
+          settingsButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            document.querySelectorAll(".folder-button").forEach((btn) => {
+              btn.classList.remove(
+                "active-filter",
+                "bg-light-primary-container",
+                "dark:bg-dark-primary-container",
+                "text-light-on-primary-container",
+                "dark:text-dark-on-primary-container"
+              );
+              btn.classList.add(
+                "text-light-on-surface-variant",
+                "dark:text-dark-on-surface-variant"
+              );
+            });
+            settingsButton.classList.add(
+              "active-filter",
+              "bg-light-primary-container",
+              "dark:bg-dark-primary-container",
+              "text-light-on-primary-container",
+              "dark:text-dark-on-primary-container"
+            );
+            settingsButton.classList.remove(
+              "text-light-on-surface-variant",
+              "dark:text-dark-on-surface-variant"
+            );
+            notesView?.classList.add("hidden");
+            settingsView?.classList.remove("hidden");
+            if (window.innerWidth < 768) toggleSidebar();
+          });
+
+          trashRetentionInput?.addEventListener("change", () => {
+            let days = parseInt(trashRetentionInput.value);
+            if (!days || days < 1) days = 1;
+            trashRetentionDays = days;
+            localStorage.setItem("trashRetentionDays", days);
+            renderNotes();
+          });
+        }
 
 
         document.querySelectorAll(".filter-type-button").forEach((button) => {
@@ -1296,7 +1357,11 @@
         const savedView = localStorage.getItem("notesViewMode");
         isGridView = savedView ? savedView === "grid" : true;
         updateViewIcon();
-      }
+
+        const savedRetention = parseInt(localStorage.getItem("trashRetentionDays"));
+        trashRetentionDays = savedRetention && savedRetention > 0 ? savedRetention : 30;
+        if (trashRetentionInput) trashRetentionInput.value = trashRetentionDays;
+     }
 
       // Toast notifications
       function showToast(message, type = "info", duration = 4000) {
