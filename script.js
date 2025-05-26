@@ -99,9 +99,6 @@
         setupEventListeners();
         setupAutoSave();
 
-        if ("Notification" in window) {
-          await Notification.requestPermission();
-        }
         notes.forEach((note) => {
           if (note.reminderAt && note.reminderAt > Date.now()) {
             setReminder(note);
@@ -790,6 +787,11 @@
       async function saveNote() {
         /* ... (mostly same, ensure currentNote is used for new notes too) ... */
         try {
+          if (!currentNote) {
+            showToast("Brak aktywnej notatki do zapisania.", "error");
+            return;
+          }
+
           const isTextNote = currentNote.type === "text";
           const title = (
             isTextNote
@@ -809,6 +811,17 @@
           currentNote.reminderAt = reminderInput
             ? new Date(reminderInput).getTime()
             : null;
+          if (
+            currentNote.reminderAt &&
+            "Notification" in window &&
+            Notification.permission === "default"
+          ) {
+            try {
+              await Notification.requestPermission();
+            } catch (e) {
+              console.error("Błąd uzyskiwania uprawnień powiadomień:", e);
+            }
+          }
           currentNote.updatedAt = Date.now();
 
           if (isTextNote) {
