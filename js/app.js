@@ -131,6 +131,7 @@
         const container = document.getElementById("notes-container");
         const pinnedContainer = document.getElementById("pinned-notes-container");
         const pinnedSection = document.getElementById("pinned-section");
+        const divider = document.getElementById("notes-divider");
         const emptyState = document.getElementById("empty-state");
         const filteredNotes = filterNotes();
 
@@ -140,6 +141,7 @@
         if (filteredNotes.length === 0) {
           container.innerHTML = "";
           pinnedContainer.innerHTML = "";
+          divider.classList.add("hidden");
           container.classList.remove(
             "sm:grid-cols-2",
             "lg:grid-cols-3",
@@ -167,6 +169,10 @@
             "xl:grid-cols-4"
           );
           pinnedSection.classList.toggle("hidden", pinned.length === 0);
+          divider.classList.toggle(
+            "hidden",
+            pinned.length === 0 || others.length === 0
+          );
           pinnedContainer.innerHTML = pinned
             .map((note) => createNoteCard(note))
             .join("");
