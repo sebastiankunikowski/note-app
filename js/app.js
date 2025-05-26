@@ -58,6 +58,11 @@
             setReminder(note);
           }
         });
+
+        handleHashChange();
+        window.addEventListener("hashchange", handleHashChange);
+      });
+
       }
 
       if (document.readyState === "loading") {
@@ -66,11 +71,115 @@
         initApp();
       }
 
+
       function toggleSidebar() {
         sidebar.classList.toggle("sidebar-open");
         sidebarOverlay.classList.toggle("hidden");
         // Optional: Prevent body scroll when sidebar is open on mobile
         // document.body.classList.toggle('overflow-hidden', sidebar.classList.contains('sidebar-open'));
+      }
+
+      function openSettings(updateHash = true) {
+        document.querySelectorAll(".folder-button").forEach((btn) => {
+          btn.classList.remove(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          btn.classList.add(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        });
+        settingsButton.classList.add(
+          "active-filter",
+          "bg-light-primary-container",
+          "dark:bg-dark-primary-container",
+          "text-light-on-primary-container",
+          "dark:text-dark-on-primary-container"
+        );
+        settingsButton.classList.remove(
+          "text-light-on-surface-variant",
+          "dark:text-dark-on-surface-variant"
+        );
+        notesView?.classList.add("hidden");
+        settingsView?.classList.remove("hidden");
+        if (updateHash) location.hash = "#settings";
+        if (window.innerWidth < 768) toggleSidebar();
+      }
+
+      function showNotesView(updateHash = true) {
+        settingsButton.classList.remove(
+          "active-filter",
+          "bg-light-primary-container",
+          "dark:bg-dark-primary-container",
+          "text-light-on-primary-container",
+          "dark:text-dark-on-primary-container"
+        );
+        settingsButton.classList.add(
+          "text-light-on-surface-variant",
+          "dark:text-dark-on-surface-variant"
+        );
+        const folderBtn = document.querySelector(
+          `.folder-button[data-folder="${currentFolder}"]`
+        );
+        if (folderBtn) {
+          document.querySelectorAll(".folder-button").forEach((btn) => {
+            btn.classList.remove(
+              "active-filter",
+              "bg-light-primary-container",
+              "dark:bg-dark-primary-container",
+              "text-light-on-primary-container",
+              "dark:text-dark-on-primary-container"
+            );
+            btn.classList.add(
+              "text-light-on-surface-variant",
+              "dark:text-dark-on-surface-variant"
+            );
+          });
+          folderBtn.classList.add(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          folderBtn.classList.remove(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        }
+        notesView?.classList.remove("hidden");
+        settingsView?.classList.add("hidden");
+        if (updateHash) location.hash = "#";
+      }
+
+      function closeAudioPlayerModal() {
+        const modal = document.querySelector("body > .fixed.bg-black\\/50");
+        if (modal && modal.querySelector("audio")) {
+          const audioSrc = modal.querySelector("audio source")?.src;
+          modal.remove();
+          if (audioSrc && audioSrc.startsWith("blob:")) {
+            URL.revokeObjectURL(audioSrc);
+          }
+          if (location.hash.startsWith("#note=")) location.hash = "#";
+        }
+      }
+
+      function handleHashChange() {
+        const hash = location.hash.slice(1);
+        if (hash.startsWith("note=")) {
+          const id = hash.split("=")[1];
+          if (id) openNote(id, false);
+        } else if (hash === "settings") {
+          openSettings(false);
+        } else {
+          closeNoteModal();
+          closeAudioPlayerModal();
+          showNotesView(false);
+        }
       }
 
       // IndexedDB setup (version 2 for potential schema changes)
@@ -529,6 +638,7 @@
         document.querySelectorAll(".folder-button").forEach((button) => {
           button.addEventListener("click", (e) => {
             e.preventDefault();
+            showNotesView(false);
             document.querySelectorAll(".folder-button").forEach((btn) => {
               btn.classList.remove(
                 "active-filter",
@@ -542,19 +652,6 @@
                 "dark:text-dark-on-surface-variant"
               );
             });
-            if (settingsButton) {
-              settingsButton.classList.remove(
-                "active-filter",
-                "bg-light-primary-container",
-                "dark:bg-dark-primary-container",
-                "text-light-on-primary-container",
-                "dark:text-dark-on-primary-container"
-              );
-              settingsButton.classList.add(
-                "text-light-on-surface-variant",
-                "dark:text-dark-on-surface-variant"
-              );
-            }
             button.classList.add(
               "active-filter",
               "bg-light-primary-container",
@@ -567,43 +664,16 @@
               "dark:text-dark-on-surface-variant"
             );
             currentFolder = button.dataset.folder;
-            settingsView?.classList.add("hidden");
-            notesView?.classList.remove("hidden");
             renderNotes();
             if (window.innerWidth < 768) toggleSidebar();
+            location.hash = "#";
           });
         });
 
         if (settingsButton) {
           settingsButton.addEventListener("click", (e) => {
             e.preventDefault();
-            document.querySelectorAll(".folder-button").forEach((btn) => {
-              btn.classList.remove(
-                "active-filter",
-                "bg-light-primary-container",
-                "dark:bg-dark-primary-container",
-                "text-light-on-primary-container",
-                "dark:text-dark-on-primary-container"
-              );
-              btn.classList.add(
-                "text-light-on-surface-variant",
-                "dark:text-dark-on-surface-variant"
-              );
-            });
-            settingsButton.classList.add(
-              "active-filter",
-              "bg-light-primary-container",
-              "dark:bg-dark-primary-container",
-              "text-light-on-primary-container",
-              "dark:text-dark-on-primary-container"
-            );
-            settingsButton.classList.remove(
-              "text-light-on-surface-variant",
-              "dark:text-dark-on-surface-variant"
-            );
-            notesView?.classList.add("hidden");
-            settingsView?.classList.remove("hidden");
-            if (window.innerWidth < 768) toggleSidebar();
+            openSettings();
           });
 
           trashRetentionInput?.addEventListener("change", () => {
@@ -693,16 +763,7 @@
           if (e.key === "Escape") {
             if (!noteModal.classList.contains("hidden")) closeNoteModal();
             if (!confirmModal.classList.contains("hidden")) closeConfirmModal();
-            const audioPlayerModal = document.querySelector(
-              "body > .fixed.bg-black\\/50"
-            ); // Adjusted selector
-            if (audioPlayerModal && audioPlayerModal.querySelector("audio")) {
-              audioPlayerModal.remove();
-              const audioSrc =
-                audioPlayerModal.querySelector("audio source")?.src;
-              if (audioSrc && audioSrc.startsWith("blob:"))
-                URL.revokeObjectURL(audioSrc);
-            }
+            closeAudioPlayerModal();
             // Close FAB menu if open
             fabMenus.forEach((menu, index) => {
               if (!menu.classList.contains("opacity-0")) {
@@ -877,6 +938,7 @@
         colorButtons.forEach((btn) => btn.classList.remove("selected"));
         pinnedCheckbox.checked = false;
         updatePinnedIconInModal();
+        if (location.hash.startsWith("#note=")) location.hash = "#";
       }
 
       // Tag Management
@@ -1255,10 +1317,11 @@
       }
 
       // Open note for viewing/playing
-      function openNote(id) {
+      function openNote(id, updateHash = true) {
         /* ... (same as before, using new modal styles if any) ... */
         const note = notes.find((n) => n.id === id);
         if (!note) return;
+        if (updateHash) location.hash = `#note=${id}`;
 
         if (note.type === "voice") {
           if (note.audioBlob instanceof Blob) {
@@ -1268,8 +1331,8 @@
               "fixed inset-0 bg-black/50 dark:bg-black/70 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"; // Higher z-index
             audioPlayerModal.innerHTML = `
                         <div class="bg-light-surface dark:bg-dark-surface rounded-3xl max-w-md w-full p-6 shadow-xl relative">
-                            <button class="absolute top-3 right-3 p-2 text-light-on-surface-variant dark:text-dark-on-surface-variant hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full" 
-                                    onclick="this.closest('.fixed').remove(); URL.revokeObjectURL('${audioUrl}');">
+                            <button class="absolute top-3 right-3 p-2 text-light-on-surface-variant dark:text-dark-on-surface-variant hover:bg-light-surface-variant dark:hover:bg-dark-surface-variant rounded-full"
+                                    onclick="closeAudioPlayerModal()">
                                 <span class="material-symbols-outlined">close</span>
                             </button>
                             <h3 class="text-lg font-medium text-light-on-surface dark:text-dark-on-surface mb-4">${
@@ -1712,3 +1775,6 @@
       window.archiveNote = archiveNote;
       window.unarchiveNote = unarchiveNote;
       window.restoreFromTrash = restoreFromTrash;
+      window.openSettings = openSettings;
+      window.showNotesView = showNotesView;
+      window.closeAudioPlayerModal = closeAudioPlayerModal;
