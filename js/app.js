@@ -156,9 +156,81 @@
         if (updateHash) location.hash = "#";
       }
 
+      function setFolder(folder, updateHash = true) {
+        showNotesView(false);
+        document.querySelectorAll(".folder-button").forEach((btn) => {
+          btn.classList.remove(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          btn.classList.add(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        });
+        const button = document.querySelector(
+          `.folder-button[data-folder="${folder}"]`
+        );
+        if (button) {
+          button.classList.add(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          button.classList.remove(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        }
+        currentFolder = folder;
+        renderNotes();
+        if (window.innerWidth < 768) toggleSidebar();
+        if (updateHash) location.hash = `#folder=${folder}`;
+      }
+
+      function setFilter(filter, updateHash = true) {
+        document.querySelectorAll(".filter-type-button").forEach((btn) => {
+          btn.classList.remove(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          btn.classList.add(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        });
+        const button = document.querySelector(
+          `.filter-type-button[data-filter="${filter}"]`
+        );
+        if (button) {
+          button.classList.add(
+            "active-filter",
+            "bg-light-primary-container",
+            "dark:bg-dark-primary-container",
+            "text-light-on-primary-container",
+            "dark:text-dark-on-primary-container"
+          );
+          button.classList.remove(
+            "text-light-on-surface-variant",
+            "dark:text-dark-on-surface-variant"
+          );
+        }
+        renderNotes();
+        if (window.innerWidth < 768) toggleSidebar();
+        if (updateHash) location.hash = `#filter=${filter}`;
+      }
+
       function closeAudioPlayerModal() {
-        const modal = document.querySelector("body > .fixed.bg-black\\/50");
-        if (modal && modal.querySelector("audio")) {
+        const modal = document.getElementById("audio-player-modal");
+        if (modal) {
           const audioSrc = modal.querySelector("audio source")?.src;
           modal.remove();
           if (audioSrc && audioSrc.startsWith("blob:")) {
@@ -175,6 +247,12 @@
           if (id) openNote(id, false);
         } else if (hash === "settings") {
           openSettings(false);
+        } else if (hash.startsWith("folder=")) {
+          const folder = hash.split("=")[1];
+          if (folder) setFolder(folder, false);
+        } else if (hash.startsWith("filter=")) {
+          const filter = hash.split("=")[1];
+          if (filter) setFilter(filter, false);
         } else {
           closeNoteModal();
           closeAudioPlayerModal();
@@ -638,35 +716,7 @@
         document.querySelectorAll(".folder-button").forEach((button) => {
           button.addEventListener("click", (e) => {
             e.preventDefault();
-            showNotesView(false);
-            document.querySelectorAll(".folder-button").forEach((btn) => {
-              btn.classList.remove(
-                "active-filter",
-                "bg-light-primary-container",
-                "dark:bg-dark-primary-container",
-                "text-light-on-primary-container",
-                "dark:text-dark-on-primary-container"
-              );
-              btn.classList.add(
-                "text-light-on-surface-variant",
-                "dark:text-dark-on-surface-variant"
-              );
-            });
-            button.classList.add(
-              "active-filter",
-              "bg-light-primary-container",
-              "dark:bg-dark-primary-container",
-              "text-light-on-primary-container",
-              "dark:text-dark-on-primary-container"
-            );
-            button.classList.remove(
-              "text-light-on-surface-variant",
-              "dark:text-dark-on-surface-variant"
-            );
-            currentFolder = button.dataset.folder;
-            renderNotes();
-            if (window.innerWidth < 768) toggleSidebar();
-            location.hash = "#";
+            setFolder(button.dataset.folder);
           });
         });
 
@@ -689,32 +739,7 @@
         document.querySelectorAll(".filter-type-button").forEach((button) => {
           button.addEventListener("click", (e) => {
             e.preventDefault();
-            document.querySelectorAll(".filter-type-button").forEach((btn) => {
-              btn.classList.remove(
-                "active-filter",
-                "bg-light-primary-container",
-                "dark:bg-dark-primary-container",
-                "text-light-on-primary-container",
-                "dark:text-dark-on-primary-container"
-              );
-              btn.classList.add(
-                "text-light-on-surface-variant",
-                "dark:text-dark-on-surface-variant"
-              ); // Reset to default text color
-            });
-            button.classList.add(
-              "active-filter",
-              "bg-light-primary-container",
-              "dark:bg-dark-primary-container",
-              "text-light-on-primary-container",
-              "dark:text-dark-on-primary-container"
-            );
-            button.classList.remove(
-              "text-light-on-surface-variant",
-              "dark:text-dark-on-surface-variant"
-            );
-            renderNotes();
-            if (window.innerWidth < 768) toggleSidebar(); // Close sidebar on mobile after selection
+            setFilter(button.dataset.filter);
           });
         });
 
@@ -1327,6 +1352,7 @@
           if (note.audioBlob instanceof Blob) {
             const audioUrl = window.URL.createObjectURL(note.audioBlob);
             const audioPlayerModal = document.createElement("div");
+            audioPlayerModal.id = "audio-player-modal";
             audioPlayerModal.className =
               "fixed inset-0 bg-black/50 dark:bg-black/70 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"; // Higher z-index
             audioPlayerModal.innerHTML = `
